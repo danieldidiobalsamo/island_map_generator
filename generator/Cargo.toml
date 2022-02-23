@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 perlin2d = "0.2.6"
-image = "0.24.1"

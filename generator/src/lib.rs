@@ -1,7 +1,6 @@
-use image::{Rgb, RgbImage};
 use perlin2d::PerlinNoise2D;
-use std::error::Error;
 
+#[derive(Clone)]
 pub struct GeneratorSettings {
     octaves: i32,
     amplitude: f64,
@@ -11,7 +10,6 @@ pub struct GeneratorSettings {
     scale: (f64, f64),
     bias: f64,
     seed: i32,
-    img_size: (u32, u32),
 }
 
 impl GeneratorSettings {
@@ -24,7 +22,6 @@ impl GeneratorSettings {
         scale: (f64, f64),
         bias: f64,
         seed: i32,
-        img_size: (u32, u32),
     ) -> GeneratorSettings {
         GeneratorSettings {
             octaves,
@@ -35,52 +32,56 @@ impl GeneratorSettings {
             scale,
             bias,
             seed,
-            img_size,
         }
     }
 }
 
-pub struct Generator<'a> {
-    settings: &'a GeneratorSettings,
+pub struct Generator {
+    settings: GeneratorSettings,
+    noise_map: PerlinNoise2D,
 }
 
-impl<'a> Generator<'a> {
-    pub fn new(settings: &GeneratorSettings) -> Generator {
-        Generator { settings }
+impl Generator {
+    pub fn new(settings: GeneratorSettings) -> Generator {
+        Self {
+            settings: settings.clone(),
+            noise_map: PerlinNoise2D::new(
+                settings.octaves,
+                settings.amplitude,
+                settings.frequency,
+                settings.persistence,
+                settings.lacunarity,
+                settings.scale,
+                settings.bias,
+                settings.seed,
+            ),
+        }
     }
 
-    pub fn generate(&self) -> Result<(), Box<dyn Error>> {
-        let perlin = PerlinNoise2D::new(
-            self.settings.octaves,
-            self.settings.amplitude,
-            self.settings.frequency,
-            self.settings.persistence,
-            self.settings.lacunarity,
-            self.settings.scale,
-            self.settings.bias,
-            self.settings.seed,
-        );
+    fn get_noise_value(&self, pixel: (u64, u64)) -> f64 {
+        let x = pixel.0;
+        let y = pixel.1;
 
-        let width = self.settings.img_size.0;
-        let height = self.settings.img_size.1;
+        let raw_noise = self.noise_map.get_noise(x as f64, y as f64);
 
-        let mut img = RgbImage::new(width, height);
+        (raw_noise + 1.0) / 2.0
+    }
 
-        for x in 0..height {
-            for y in 0..width {
-                let noise = (perlin.get_noise(x as f64, y as f64) + 1.0) / 2.0;
+    pub fn get_pixel_color(&self, pixel: (u64, u64)) -> (u8, u8, u8) {
+        let noise = self.get_noise_value(pixel);
+        let color;
 
-                if noise > 0.5 {
-                    img.put_pixel(y, x, Rgb([0, 0, 255]));
-                } else {
-                    img.put_pixel(y, x, Rgb([25, 51, 0]));
-                }
-            }
+        if noise > 0.5 {
+            color = (0, 0, 255);
+        } else {
+            color = (25, 51, 0);
         }
 
-        img.save("./target/island.png")?;
+        color
+    }
 
-        Ok(())
+    pub fn set_octaves(&mut self, octave: i32) {
+        self.settings.octaves = octave;
     }
 }
 
@@ -88,19 +89,15 @@ impl<'a> Generator<'a> {
 mod tests {
 
     use super::*;
-    use std::path::Path;
 
     #[test]
-    fn island_file_generated() {
+    fn noise_betwen_zero_and_one() {
         let generator_settings =
-            GeneratorSettings::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101, (100, 100));
+            GeneratorSettings::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101);
 
-        let generator = Generator::new(&generator_settings);
-        generator.generate().unwrap_or_else(|err| {
-            eprintln!("Cannot write island image: {}", err);
-            panic!();
-        });
+        let generator = Generator::new(generator_settings);
+        let noise = generator.get_noise_value((10, 25));
 
-        assert!(Path::new("./target/island.png").exists());
+        assert!(noise >= 0.0 && noise <= 1.0);
     }
 }

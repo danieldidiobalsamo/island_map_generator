@@ -1,6 +1,6 @@
 use generator::{self, Generator, GeneratorSettings};
-use std::f64;
-use std::process;
+use log::info;
+use log::Level;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
@@ -12,8 +12,9 @@ enum Msg {
 }
 
 struct Model {
-    mapWidth: f64,
-    mapHeight: f64,
+    map_width: f64,
+    map_height: f64,
+    generator: Generator,
 }
 
 impl Component for Model {
@@ -22,8 +23,18 @@ impl Component for Model {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            mapWidth: 1280.0,
-            mapHeight: 720.0,
+            map_width: 500.0,
+            map_height: 800.0,
+            generator: Generator::new(GeneratorSettings::new(
+                6,
+                1.0,
+                0.5,
+                1.0,
+                2.0,
+                (200.0, 200.0),
+                0.5,
+                101,
+            )),
         }
     }
 
@@ -34,6 +45,7 @@ impl Component for Model {
                     .expect("can't get window")
                     .document()
                     .expect("can't get document");
+
                 let canvas = document
                     .get_element_by_id("islandCanvas")
                     .expect("canvas not found");
@@ -49,32 +61,17 @@ impl Component for Model {
                     .dyn_into::<web_sys::CanvasRenderingContext2d>()
                     .unwrap();
 
-                context.clear_rect(0.0, 0.0, self.mapWidth, self.mapHeight);
+                context.clear_rect(0.0, 0.0, self.map_width, self.map_width);
 
-                context.begin_path();
+                for x in 0..self.map_width as u64 {
+                    for y in 0..self.map_height as u64 {
+                        let color = self.generator.get_pixel_color((x, y));
+                        let rgb = format!("rgb({},{},{})", color.0, color.1, color.2);
 
-                // Draw the outer circle.
-                context
-                    .arc(75.0, 75.0, 50.0, 0.0, f64::consts::PI * 2.0)
-                    .unwrap();
-
-                // Draw the mouth.
-                context.move_to(110.0, 75.0);
-                context.arc(75.0, 75.0, 35.0, 0.0, f64::consts::PI).unwrap();
-
-                // Draw the left eye.
-                context.move_to(65.0, 65.0);
-                context
-                    .arc(60.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-                    .unwrap();
-
-                // Draw the right eye.
-                context.move_to(95.0, 65.0);
-                context
-                    .arc(90.0, 65.0, 5.0, 0.0, f64::consts::PI * 2.0)
-                    .unwrap();
-
-                context.stroke();
+                        context.set_fill_style(&rgb.into());
+                        context.fill_rect(x as f64, y as f64, 1.0, 1.0);
+                    }
+                }
 
                 true
             }
@@ -87,7 +84,7 @@ impl Component for Model {
 
             <body>
 
-                <canvas id="islandCanvas" width=1280 height=720></canvas>
+                <canvas id="islandCanvas" width=500 height=800></canvas>
 
                 <div id="settings" style="width: 100px;display: inline-block;">
                   <label for="octaves">{"octaves"}</label>
@@ -114,7 +111,7 @@ impl Component for Model {
                   <label for="seed">{"seed"}</label>
                   <input type="range" min="1" max="100" value="50" class="slider" id="seed"/>
 
-                  <button id="generate_btn" onclick={link.callback(|_| Msg::Generate)}>{"Generate(tmp)"}</button>
+                  <button id="generate_btn" onclick={link.callback(|_| Msg::Generate)}>{"Generate"}</button>
 
                 </div>
 
@@ -124,14 +121,6 @@ impl Component for Model {
 }
 
 fn main() {
-    // let generator_settings =
-    //     GeneratorSettings::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101, (1280, 720));
-
-    // let generator = Generator::new(&generator_settings);
-    // generator.generate().unwrap_or_else(|err| {
-    //     eprintln!("Cannot write island image: {}", err);
-    //     process::exit(1);
-    // });
-
+    console_log::init_with_level(Level::Debug);
     yew::start_app::<Model>();
 }
