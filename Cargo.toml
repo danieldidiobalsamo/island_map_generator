@@ -3,7 +3,24 @@ name = "island_map_generator"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+yew = "0.19.3"
 generator = {path = "./generator"}
+wasm-bindgen = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "Attr",
+    "CanvasRenderingContext2d",
+    "Document",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "HtmlInputElement",
+    "Node",
+    "Text",
+    "Window",
+]
