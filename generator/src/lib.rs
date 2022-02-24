@@ -80,8 +80,45 @@ impl Generator {
         color
     }
 
-    pub fn set_octaves(&mut self, octave: i32) {
-        self.settings.octaves = octave;
+    pub fn set_octaves(&mut self, octaves: i32) {
+        self.settings.octaves = octaves;
+    }
+
+    pub fn set_frequency(&mut self, frequency: f64) {
+        self.settings.frequency = frequency;
+    }
+
+    pub fn set_persistence(&mut self, persistence: f64) {
+        self.settings.persistence = persistence;
+    }
+
+    pub fn set_lacunarity(&mut self, lacunarity: f64) {
+        self.settings.lacunarity = lacunarity;
+    }
+
+    pub fn set_scale(&mut self, scale: (f64, f64)) {
+        self.settings.scale = scale;
+    }
+
+    pub fn set_bias(&mut self, bias: f64) {
+        self.settings.bias = bias;
+    }
+
+    pub fn set_seed(&mut self, seed: i32) {
+        self.settings.seed = seed;
+    }
+
+    pub fn update_generator(&mut self) {
+        self.noise_map = PerlinNoise2D::new(
+            self.settings.octaves,
+            self.settings.amplitude,
+            self.settings.frequency,
+            self.settings.persistence,
+            self.settings.lacunarity,
+            self.settings.scale,
+            self.settings.bias,
+            self.settings.seed,
+        )
     }
 }
 
