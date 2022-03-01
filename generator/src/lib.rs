@@ -41,6 +41,30 @@ pub struct Generator {
     noise_map: PerlinNoise2D,
 }
 
+enum Biome {
+    DeepWater,
+    Water,
+    Shore,
+    Sand,
+    Grass,
+    Forest,
+    Moutain,
+    HighMoutain,
+}
+
+fn get_biome(biome: Biome) -> (u8, u8, u8) {
+    match biome {
+        Biome::DeepWater => (28, 2, 198),
+        Biome::Water => (14, 76, 156),
+        Biome::Shore => (13, 108, 181),
+        Biome::Sand => (229, 232, 135),
+        Biome::Grass => (36, 159, 61),
+        Biome::Forest => (19, 112, 38),
+        Biome::Moutain => (128, 144, 143),
+        Biome::HighMoutain => (146, 179, 177),
+    }
+}
+
 impl Generator {
     pub fn new(settings: GeneratorSettings) -> Generator {
         Self {
@@ -71,10 +95,22 @@ impl Generator {
         let noise = self.get_noise_value(pixel);
         let color;
 
-        if noise > 0.5 {
-            color = (0, 0, 255);
+        if noise > 0.99 {
+            color = get_biome(Biome::DeepWater);
+        } else if noise > 0.95 {
+            color = get_biome(Biome::Water);
+        } else if noise > 0.9 {
+            color = get_biome(Biome::Shore);
+        } else if noise > 0.85 {
+            color = get_biome(Biome::Sand);
+        } else if noise > 0.8 {
+            color = get_biome(Biome::Grass);
+        } else if noise > 0.7 {
+            color = get_biome(Biome::Forest);
+        } else if noise > 0.65 {
+            color = get_biome(Biome::Moutain);
         } else {
-            color = (25, 51, 0);
+            color = get_biome(Biome::HighMoutain);
         }
 
         color
