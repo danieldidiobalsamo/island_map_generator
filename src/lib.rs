@@ -93,6 +93,43 @@ impl Model {
                 .unwrap(),
         );
     }
+
+    fn generate_map(&mut self) {
+        let document = web_sys::window()
+            .expect("can't get window")
+            .document()
+            .expect("can't get document");
+
+        self.update_generator_settings(&document);
+        self.generator.update_generator();
+
+        let canvas = document
+            .get_element_by_id("islandCanvas")
+            .expect("canvas not found");
+        let canvas: web_sys::HtmlCanvasElement = canvas
+            .dyn_into::<web_sys::HtmlCanvasElement>()
+            .map_err(|_| ())
+            .unwrap();
+
+        let context = canvas
+            .get_context("2d")
+            .unwrap()
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()
+            .unwrap();
+
+        context.clear_rect(0.0, 0.0, self.map_width, self.map_width);
+
+        for x in 0..self.map_width as u64 {
+            for y in 0..self.map_height as u64 {
+                let color = self.generator.get_pixel_color((x, y));
+                let rgb = format!("rgb({},{},{})", color.0, color.1, color.2);
+
+                context.set_fill_style(&rgb.into());
+                context.fill_rect(x as f64, y as f64, 1.0, 1.0);
+            }
+        }
+    }
 }
 
 impl Component for Model {
@@ -119,40 +156,7 @@ impl Component for Model {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Generate => {
-                let document = web_sys::window()
-                    .expect("can't get window")
-                    .document()
-                    .expect("can't get document");
-
-                self.update_generator_settings(&document);
-                self.generator.update_generator();
-
-                let canvas = document
-                    .get_element_by_id("islandCanvas")
-                    .expect("canvas not found");
-                let canvas: web_sys::HtmlCanvasElement = canvas
-                    .dyn_into::<web_sys::HtmlCanvasElement>()
-                    .map_err(|_| ())
-                    .unwrap();
-
-                let context = canvas
-                    .get_context("2d")
-                    .unwrap()
-                    .unwrap()
-                    .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                    .unwrap();
-
-                context.clear_rect(0.0, 0.0, self.map_width, self.map_width);
-
-                for x in 0..self.map_width as u64 {
-                    for y in 0..self.map_height as u64 {
-                        let color = self.generator.get_pixel_color((x, y));
-                        let rgb = format!("rgb({},{},{})", color.0, color.1, color.2);
-
-                        context.set_fill_style(&rgb.into());
-                        context.fill_rect(x as f64, y as f64, 1.0, 1.0);
-                    }
-                }
+                self.generate_map();
 
                 false
             }
