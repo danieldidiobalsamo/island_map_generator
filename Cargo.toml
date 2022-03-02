@@ -2,6 +2,8 @@
 name = "island_map_generator"
 version = "0.1.0"
 edition = "2021"
+description = "This project is about island map procedural generation using Web Assembly (yew framework)"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 yew = "0.19.3"
