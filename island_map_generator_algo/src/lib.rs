@@ -1,5 +1,5 @@
 use noise::utils::{NoiseMap, NoiseMapBuilder, PlaneMapBuilder};
-use noise::{Clamp, Fbm, MultiFractal, Perlin};
+use noise::{Clamp, Fbm, MultiFractal, Perlin, ScaleBias};
 
 pub struct Generator {
     noise_map: NoiseMap,
@@ -7,7 +7,7 @@ pub struct Generator {
 
 impl Default for Generator {
     fn default() -> Self {
-        Generator::new(6, 4.2, 1.5, 1.2, (100.0, 100.0), 1.0, 9000)
+        Generator::new(6, 4.2, 1.5, 1.2, 1.0, 0.0, 9000)
     }
 }
 
@@ -41,7 +41,7 @@ impl Generator {
         frequency: f64,
         persistence: f64,
         lacunarity: f64,
-        scale: (f64, f64),
+        scale: f64,
         bias: f64,
         seed: u32,
     ) -> Generator {
@@ -51,8 +51,12 @@ impl Generator {
             .set_persistence(persistence)
             .set_lacunarity(lacunarity);
 
-        let clamp: Clamp<_, Fbm<Perlin>, 2> =
-            Clamp::new(fbm).set_lower_bound(0.0).set_upper_bound(1.0);
+        let scale_bias: ScaleBias<_, Fbm<Perlin>, 2> =
+            ScaleBias::new(fbm).set_scale(scale).set_bias(bias);
+
+        let clamp: Clamp<_, ScaleBias<f64, Fbm<Perlin>, 2>, 2> = Clamp::new(scale_bias)
+            .set_lower_bound(0.0)
+            .set_upper_bound(1.0);
 
         let noise_map = PlaneMapBuilder::new(clamp)
             .set_size(300, 400)

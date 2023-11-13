@@ -70,7 +70,7 @@ impl Model {
             frequency,
             persistence,
             lacunarity,
-            (scale, scale),
+            scale,
             bias,
             seed,
         );
@@ -156,10 +156,10 @@ impl Component for Model {
                   <input type="range" min="1" max="1.5" value="1.2" step="0.05" class="slider" id="lacunarity"/>
 
                   <label for="scale">{"scale"}</label>
-                  <input type="range" min="1" max="500" value="100" class="slider" id="scale"/>
+                  <input type="range" min="0" max="2" value="1" step="0.01" class="slider" id="scale"/>
 
                   <label for="bias">{"bias"}</label>
-                  <input type="range" min="0" max="2" value="1" step="0.1" class="slider" id="bias"/>
+                  <input type="range" min="-0.5" max="0.5" value="0.17" step="0.01" class="slider" id="bias"/>
 
                   <label for="seed">{"seed"}</label>
                   <input type="number" min="0" max={u32::MAX.to_string()} value="9000" id="seed"/>
