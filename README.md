@@ -17,6 +17,7 @@ cargo install trunk
 
 - Launch the server:
 ~~~
+cd island_map_generator_web_app/
 trunk serve --release
 ~~~
 
