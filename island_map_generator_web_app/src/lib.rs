@@ -32,7 +32,7 @@ impl Model {
     fn update_generator_settings(&mut self, document: &web_sys::Document) {
         let octaves = self
             .get_generation_setting_as_string("octaves", &document)
-            .parse::<i32>()
+            .parse::<usize>()
             .unwrap();
 
         let frequency = self
@@ -62,12 +62,11 @@ impl Model {
 
         let seed = self
             .get_generation_setting_as_string("seed", &document)
-            .parse::<i32>()
+            .parse::<u32>()
             .unwrap();
 
-        self.generator.update_generator(
+        self.generator = Generator::new(
             octaves,
-            1.0, // hardcoded amplitude, tmp
             frequency,
             persistence,
             lacunarity,
@@ -106,7 +105,6 @@ impl Model {
             for y in 0..self.map_height as u64 {
                 let color = self.generator.get_pixel_color((x, y));
                 let rgb = format!("rgb({},{},{})", color.0, color.1, color.2);
-
                 context.set_fill_style(&rgb.into());
                 context.fill_rect(x as f64, y as f64, 1.0, 1.0);
             }
@@ -122,7 +120,7 @@ impl Component for Model {
         Self {
             map_width: 300.0,
             map_height: 400.0,
-            generator: Generator::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101),
+            generator: Default::default(),
         }
     }
 
@@ -146,16 +144,16 @@ impl Component for Model {
 
                 <div id="settings" style="width: 100px;display: inline-block;">
                   <label for="octaves">{"octaves"}</label>
-                  <input type="range" min="1" max="5" value="3" class="slider" id="octaves"/>
+                  <input type="range" min="1" max="10" value="6" class="slider" id="octaves"/>
 
                   <label for="frequency">{"frequency"}</label>
-                  <input type="range" min="1" max="10" step="0.1" value="4" class="slider" id="frequency"/>
+                  <input type="range" min="1" max="10" step="0.1" value="4.2" class="slider" id="frequency"/>
 
                   <label for="persistence">{"persistence"}</label>
-                  <input type="range" min="1" max="3" value="0.3" step="0.1" class="slider" id="persistence"/>
+                  <input type="range" min="1" max="2" value="1.5" step="0.05" class="slider" id="persistence"/>
 
                   <label for="lacunarity">{"lacunarity"}</label>
-                  <input type="range" min="1" max="2" value="1.5" step="0.1" class="slider" id="lacunarity"/>
+                  <input type="range" min="1" max="1.5" value="1.2" step="0.05" class="slider" id="lacunarity"/>
 
                   <label for="scale">{"scale"}</label>
                   <input type="range" min="1" max="500" value="100" class="slider" id="scale"/>
@@ -164,7 +162,7 @@ impl Component for Model {
                   <input type="range" min="0" max="2" value="1" step="0.1" class="slider" id="bias"/>
 
                   <label for="seed">{"seed"}</label>
-                  <input type="number" min="0" max="100000" value="80000" id="seed"/>
+                  <input type="number" min="0" max={u32::MAX.to_string()} value="9000" id="seed"/>
 
                   <button id="generate_btn" onclick={link.callback(|_| Msg::Generate)}>{"Generate"}</button>
 
