@@ -83,37 +83,23 @@ impl Generator {
     }
 
     fn get_noise_value(&self, pixel: (u64, u64)) -> f64 {
-        let x = pixel.0;
-        let y = pixel.1;
-
-        let raw_noise = self.noise_map.get_noise(x as f64, y as f64);
+        let (x, y) = (pixel.0 as f64, pixel.1 as f64);
+        let raw_noise = self.noise_map.get_noise(x, y);
 
         (raw_noise + 1.0) / 2.0
     }
 
     pub fn get_pixel_color(&self, pixel: (u64, u64)) -> (u8, u8, u8) {
-        let noise = self.get_noise_value(pixel);
-        let color;
-
-        if noise > 0.99 {
-            color = get_biome(Biome::DeepWater);
-        } else if noise > 0.95 {
-            color = get_biome(Biome::Water);
-        } else if noise > 0.9 {
-            color = get_biome(Biome::Shore);
-        } else if noise > 0.85 {
-            color = get_biome(Biome::Sand);
-        } else if noise > 0.8 {
-            color = get_biome(Biome::Grass);
-        } else if noise > 0.7 {
-            color = get_biome(Biome::Forest);
-        } else if noise > 0.65 {
-            color = get_biome(Biome::Moutain);
-        } else {
-            color = get_biome(Biome::HighMoutain);
+        match self.get_noise_value(pixel) {
+            x if x >= 0.99 => get_biome(Biome::DeepWater),
+            x if x >= 0.95 => get_biome(Biome::Water),
+            x if x >= 0.9 => get_biome(Biome::Shore),
+            x if x >= 0.85 => get_biome(Biome::Sand),
+            x if x >= 0.8 => get_biome(Biome::Grass),
+            x if x >= 0.7 => get_biome(Biome::Forest),
+            x if x >= 0.65 => get_biome(Biome::Moutain),
+            _ => get_biome(Biome::HighMoutain),
         }
-
-        color
     }
 
     pub fn set_octaves(&mut self, octaves: i32) {
