@@ -1,4 +1,4 @@
-use generator::{self, Generator, GeneratorSettings};
+use island_map_generator_algo::{self, Generator, GeneratorSettings};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
