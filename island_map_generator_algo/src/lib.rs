@@ -1,43 +1,6 @@
 use perlin2d::PerlinNoise2D;
 
-#[derive(Clone)]
-pub struct GeneratorSettings {
-    octaves: i32,
-    amplitude: f64,
-    frequency: f64,
-    persistence: f64,
-    lacunarity: f64,
-    scale: (f64, f64),
-    bias: f64,
-    seed: i32,
-}
-
-impl GeneratorSettings {
-    pub fn new(
-        octaves: i32,
-        amplitude: f64,
-        frequency: f64,
-        persistence: f64,
-        lacunarity: f64,
-        scale: (f64, f64),
-        bias: f64,
-        seed: i32,
-    ) -> GeneratorSettings {
-        GeneratorSettings {
-            octaves,
-            amplitude,
-            frequency,
-            persistence,
-            lacunarity,
-            scale,
-            bias,
-            seed,
-        }
-    }
-}
-
 pub struct Generator {
-    settings: GeneratorSettings,
     noise_map: PerlinNoise2D,
 }
 
@@ -66,18 +29,26 @@ fn get_biome(biome: Biome) -> (u8, u8, u8) {
 }
 
 impl Generator {
-    pub fn new(settings: GeneratorSettings) -> Generator {
+    pub fn new(
+        octaves: i32,
+        amplitude: f64,
+        frequency: f64,
+        persistence: f64,
+        lacunarity: f64,
+        scale: (f64, f64),
+        bias: f64,
+        seed: i32,
+    ) -> Generator {
         Self {
-            settings: settings.clone(),
             noise_map: PerlinNoise2D::new(
-                settings.octaves,
-                settings.amplitude,
-                settings.frequency,
-                settings.persistence,
-                settings.lacunarity,
-                settings.scale,
-                settings.bias,
-                settings.seed,
+                octaves,
+                amplitude,
+                frequency,
+                persistence,
+                lacunarity,
+                scale,
+                bias,
+                seed,
             ),
         }
     }
@@ -102,44 +73,26 @@ impl Generator {
         }
     }
 
-    pub fn set_octaves(&mut self, octaves: i32) {
-        self.settings.octaves = octaves;
-    }
-
-    pub fn set_frequency(&mut self, frequency: f64) {
-        self.settings.frequency = frequency;
-    }
-
-    pub fn set_persistence(&mut self, persistence: f64) {
-        self.settings.persistence = persistence;
-    }
-
-    pub fn set_lacunarity(&mut self, lacunarity: f64) {
-        self.settings.lacunarity = lacunarity;
-    }
-
-    pub fn set_scale(&mut self, scale: (f64, f64)) {
-        self.settings.scale = scale;
-    }
-
-    pub fn set_bias(&mut self, bias: f64) {
-        self.settings.bias = bias;
-    }
-
-    pub fn set_seed(&mut self, seed: i32) {
-        self.settings.seed = seed;
-    }
-
-    pub fn update_generator(&mut self) {
+    pub fn update_generator(
+        &mut self,
+        octaves: i32,
+        amplitude: f64,
+        frequency: f64,
+        persistence: f64,
+        lacunarity: f64,
+        scale: (f64, f64),
+        bias: f64,
+        seed: i32,
+    ) {
         self.noise_map = PerlinNoise2D::new(
-            self.settings.octaves,
-            self.settings.amplitude,
-            self.settings.frequency,
-            self.settings.persistence,
-            self.settings.lacunarity,
-            self.settings.scale,
-            self.settings.bias,
-            self.settings.seed,
+            octaves,
+            amplitude,
+            frequency,
+            persistence,
+            lacunarity,
+            scale,
+            bias,
+            seed,
         )
     }
 }
@@ -151,10 +104,7 @@ mod tests {
 
     #[test]
     fn noise_betwen_zero_and_one() {
-        let generator_settings =
-            GeneratorSettings::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101);
-
-        let generator = Generator::new(generator_settings);
+        let generator = Generator::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101);
         let noise = generator.get_noise_value((10, 25));
 
         assert!(noise >= 0.0 && noise <= 1.0);
