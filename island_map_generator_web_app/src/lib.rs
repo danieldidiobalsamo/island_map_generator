@@ -1,4 +1,4 @@
-use island_map_generator_algo::{self, Generator, GeneratorSettings};
+use island_map_generator_algo::{self, Generator};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
@@ -16,81 +16,64 @@ pub enum Msg {
 }
 
 impl Model {
-    fn update_generator_settings(&mut self, document: &web_sys::Document) {
-        self.generator.set_octaves(
-            document
-                .get_element_by_id("octaves")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<i32>()
-                .unwrap(),
-        );
-
-        self.generator.set_frequency(
-            document
-                .get_element_by_id("frequency")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<f64>()
-                .unwrap(),
-        );
-
-        self.generator.set_persistence(
-            document
-                .get_element_by_id("persistence")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<f64>()
-                .unwrap(),
-        );
-
-        self.generator.set_lacunarity(
-            document
-                .get_element_by_id("lacunarity")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<f64>()
-                .unwrap(),
-        );
-
-        let scale = document
-            .get_element_by_id("scale")
+    fn get_generation_setting_as_string(
+        &mut self,
+        name: &str,
+        document: &web_sys::Document,
+    ) -> String {
+        document
+            .get_element_by_id(name)
             .unwrap()
             .dyn_ref::<HtmlInputElement>()
             .unwrap()
             .value()
+    }
+
+    fn update_generator_settings(&mut self, document: &web_sys::Document) {
+        let octaves = self
+            .get_generation_setting_as_string("octaves", &document)
+            .parse::<i32>()
+            .unwrap();
+
+        let frequency = self
+            .get_generation_setting_as_string("frequency", &document)
             .parse::<f64>()
             .unwrap();
-        self.generator.set_scale((scale, scale));
 
-        self.generator.set_bias(
-            document
-                .get_element_by_id("bias")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<f64>()
-                .unwrap(),
-        );
+        let persistence = self
+            .get_generation_setting_as_string("persistence", &document)
+            .parse::<f64>()
+            .unwrap();
 
-        self.generator.set_seed(
-            document
-                .get_element_by_id("seed")
-                .unwrap()
-                .dyn_ref::<HtmlInputElement>()
-                .unwrap()
-                .value()
-                .parse::<i32>()
-                .unwrap(),
+        let lacunarity = self
+            .get_generation_setting_as_string("lacunarity", &document)
+            .parse::<f64>()
+            .unwrap();
+
+        let scale = self
+            .get_generation_setting_as_string("scale", &document)
+            .parse::<f64>()
+            .unwrap();
+
+        let bias = self
+            .get_generation_setting_as_string("bias", &document)
+            .parse::<f64>()
+            .unwrap();
+
+        let seed = self
+            .get_generation_setting_as_string("seed", &document)
+            .parse::<i32>()
+            .unwrap();
+
+        self.generator.update_generator(
+            octaves,
+            1.0, // hardcoded amplitude, tmp
+            frequency,
+            persistence,
+            lacunarity,
+            (scale, scale),
+            bias,
+            seed,
         );
     }
 
@@ -101,7 +84,6 @@ impl Model {
             .expect("can't get document");
 
         self.update_generator_settings(&document);
-        self.generator.update_generator();
 
         let canvas = document
             .get_element_by_id("islandCanvas")
@@ -140,16 +122,7 @@ impl Component for Model {
         Self {
             map_width: 300.0,
             map_height: 400.0,
-            generator: Generator::new(GeneratorSettings::new(
-                6,
-                1.0,
-                0.5,
-                1.0,
-                2.0,
-                (200.0, 200.0),
-                0.5,
-                101,
-            )),
+            generator: Generator::new(6, 1.0, 0.5, 1.0, 2.0, (200.0, 200.0), 0.5, 101),
         }
     }
 
