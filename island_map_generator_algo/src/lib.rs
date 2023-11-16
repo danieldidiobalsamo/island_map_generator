@@ -3,11 +3,13 @@ use noise::{Clamp, Fbm, MultiFractal, Perlin, ScaleBias};
 
 pub struct Generator {
     noise_map: NoiseMap,
+    width: usize,
+    height: usize,
 }
 
 impl Default for Generator {
     fn default() -> Self {
-        Generator::new(6, 4.2, 1.5, 1.2, 1.0, 0.0, 9000)
+        Generator::new((512, 512), 6, 4.2, 1.5, 1.2, 1.0, 0.0, 9000)
     }
 }
 
@@ -37,6 +39,7 @@ fn get_biome(biome: Biome) -> (u8, u8, u8) {
 
 impl Generator {
     pub fn new(
+        dimensions: (usize, usize),
         octaves: usize,
         frequency: f64,
         persistence: f64,
@@ -58,21 +61,26 @@ impl Generator {
             .set_lower_bound(0.0)
             .set_upper_bound(1.0);
 
+        let (w, h) = dimensions;
+
         let noise_map = PlaneMapBuilder::new(clamp)
-            .set_size(300, 400)
+            .set_size(w, h)
             .set_x_bounds(0.0, 1.0)
             .set_y_bounds(0.0, 1.0)
             .build();
 
-        Self { noise_map }
+        Self {
+            noise_map,
+            width: w,
+            height: h,
+        }
     }
 
-    fn get_noise_value(&self, pixel: (u64, u64)) -> f64 {
-        let (x, y) = (pixel.0 as usize, pixel.1 as usize);
-        self.noise_map.get_value(x, y)
+    fn get_noise_value(&self, pixel: (usize, usize)) -> f64 {
+        self.noise_map.get_value(pixel.0, pixel.1)
     }
 
-    pub fn get_pixel_color(&self, pixel: (u64, u64)) -> (u8, u8, u8) {
+    fn get_pixel_color(&self, pixel: (usize, usize)) -> (u8, u8, u8) {
         match self.get_noise_value(pixel) {
             x if x >= 0.95 => get_biome(Biome::HighMoutain),
             x if x >= 0.9 => get_biome(Biome::Moutain),
@@ -83,6 +91,22 @@ impl Generator {
             x if x >= 0.1 => get_biome(Biome::Water),
             _ => get_biome(Biome::DeepWater),
         }
+    }
+
+    pub fn get_noise_map_vec_rgba_8_u_norm(&self) -> Vec<u8> {
+        let mut noise = Vec::new();
+
+        for i in 0..self.width {
+            for j in 0..self.height {
+                let (r, g, b) = self.get_pixel_color((i, j));
+                noise.push(r);
+                noise.push(g);
+                noise.push(b);
+                noise.push(1); // transparency always equals 1
+            }
+        }
+
+        noise
     }
 }
 

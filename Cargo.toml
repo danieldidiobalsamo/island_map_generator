@@ -1,6 +1,6 @@
 [workspace]
-
+resolver = "2"
 members = [
     "island_map_generator_algo",
-    "island_map_generator_web_app",
+    "island_map_generator_bevy",
 ]
