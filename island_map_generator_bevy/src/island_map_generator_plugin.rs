@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
-use bevy_inspector_egui::prelude::*;
-use bevy_inspector_egui::quick::ResourceInspectorPlugin;
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use island_map_generator_algo::Generator;
 
 pub struct IslandMapGeneratorPlugin;
@@ -13,36 +12,40 @@ impl Plugin for IslandMapGeneratorPlugin {
                 ..Default::default()
             })
             .add_systems(Startup, (spawn_camera, spawn_landspace).chain())
-            .add_systems(Update, (generate_if_necessary, check_keyboard_input))
-            .add_plugins(ResourceInspectorPlugin::<Settings>::new());
+            .add_systems(
+                Update,
+                (generate_if_necessary, check_keyboard_input, settings_menu),
+            )
+            .add_plugins(EguiPlugin);
     }
 }
 
-#[derive(Resource, Reflect, InspectorOptions, Debug)]
-#[reflect(Resource, InspectorOptions)]
+#[derive(Clone, Reflect, Debug, PartialEq)]
+enum TextureQuality {
+    VeryHigh = 2048,
+    High = 1024,
+    Medium = 512,
+    Low = 256,
+    VeryLow = 128,
+}
+
+#[derive(Resource, Reflect, Debug)]
+#[reflect(Resource)]
 struct Settings {
-    #[inspector(min = 128, max = 1024, speed = 128.)]
-    texture_resolution: usize,
-    #[inspector(min = 1, max = 10, speed = 1.)]
+    texture_quality: TextureQuality,
     octaves: usize,
-    #[inspector(min = 1., max = 10., speed = 0.1)]
     frequency: f64,
-    #[inspector(min = 1., max = 10., speed = 0.1)]
     persistence: f64,
-    #[inspector(min = 1., max = 10., speed = 0.1)]
     lacunarity: f64,
-    #[inspector(min = -1., max = 1., speed = 0.1)]
     scale: f64,
-    #[inspector(min = -1., max = 1., speed = 0.1)]
     bias: f64,
-    #[inspector(min = 0, max = u32::MAX, speed = 1.)]
     seed: u32,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            texture_resolution: 512,
+            texture_quality: TextureQuality::Medium,
             octaves: 6,
             frequency: 4.2,
             persistence: 1.5,
@@ -68,6 +71,66 @@ struct LandscapeBundle {
     pbr: PbrBundle,
 }
 
+fn settings_menu(mut contexts: EguiContexts, mut settings: ResMut<Settings>) {
+    egui::Window::new("Settings").show(contexts.ctx_mut(), |ui| {
+        ui.horizontal(|ui| {
+            ui.radio_value(
+                &mut settings.texture_quality,
+                TextureQuality::VeryLow,
+                "VeryLow",
+            );
+            ui.radio_value(&mut settings.texture_quality, TextureQuality::Low, "Low");
+            ui.radio_value(
+                &mut settings.texture_quality,
+                TextureQuality::Medium,
+                "Medium",
+            );
+            ui.radio_value(&mut settings.texture_quality, TextureQuality::High, "High");
+            ui.radio_value(
+                &mut settings.texture_quality,
+                TextureQuality::VeryHigh,
+                "Very high",
+            );
+        });
+
+        ui.add(
+            egui::Slider::new(&mut settings.octaves, 0..=10)
+                .text("Octaves")
+                .drag_value_speed(1.0),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.frequency, 1.0..=10.0)
+                .text("Frequency")
+                .drag_value_speed(0.1),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.persistence, 1.2..=2.0)
+                .text("persistence")
+                .drag_value_speed(0.001),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.lacunarity, 1.0..=1.5)
+                .text("Lacunarity")
+                .drag_value_speed(0.001),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.scale, -1.0..=1.0)
+                .text("scale")
+                .drag_value_speed(0.001),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.bias, -1.0..=1.0)
+                .text("bias")
+                .drag_value_speed(0.001),
+        );
+        ui.add(
+            egui::Slider::new(&mut settings.seed, 0..=100000)
+                .text("seed")
+                .drag_value_speed(1.0),
+        );
+    });
+}
+
 fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 20.0).looking_at(Vec3::ZERO, Vec3::Z),
@@ -81,7 +144,7 @@ fn spawn_landspace(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    let image = generate_landscape_noise_map(&Settings::default());
+    let image = generate_landscape_noise_map(Settings::default());
 
     let plane = Mesh::from(shape::Quad {
         size: Vec2::new(10., 10.),
@@ -110,9 +173,11 @@ fn spawn_landspace(
     },));
 }
 
-fn generate_landscape_noise_map(settings: &Settings) -> Image {
+fn generate_landscape_noise_map(settings: Settings) -> Image {
+    let texture_resolution = settings.texture_quality as usize;
+
     let noise_map = Generator::new(
-        (settings.texture_resolution, settings.texture_resolution),
+        (texture_resolution, texture_resolution),
         settings.octaves,
         settings.frequency,
         settings.persistence,
@@ -123,8 +188,8 @@ fn generate_landscape_noise_map(settings: &Settings) -> Image {
     );
 
     let size = Extent3d {
-        width: settings.texture_resolution as u32,
-        height: settings.texture_resolution as u32,
+        width: texture_resolution as u32,
+        height: texture_resolution as u32,
         ..default()
     };
 
@@ -143,8 +208,9 @@ fn generate_if_necessary(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     if settings.is_changed() {
+        let texture_resolution = settings.texture_quality.clone() as usize;
         let gen = Generator::new(
-            (settings.texture_resolution, settings.texture_resolution),
+            (texture_resolution, texture_resolution),
             settings.octaves,
             settings.frequency,
             settings.persistence,
@@ -155,8 +221,8 @@ fn generate_if_necessary(
         );
 
         let size = Extent3d {
-            width: settings.texture_resolution as u32,
-            height: settings.texture_resolution as u32,
+            width: texture_resolution as u32,
+            height: texture_resolution as u32,
             ..default()
         };
 
