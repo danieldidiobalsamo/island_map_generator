@@ -1,27 +1,18 @@
 # About
 
-This project is about island map procedural generation using Rust and Web Assembly (yew framework).
-The web interface allows to change the generator parameters to customize the map.
-
-The generator is based on Perlin noise.
-
-![image info](./examples/example.png)
+Island map procedural generation using Rust and Bevy engine.
+The generator is based on Fractal Brownian motion.
 
 # How to launch
 
-- Make sure Rust is installed, as well as web assembly tools :
+Firstly, install [bevy dependencies](https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md)
+
+Then clone this repository and launch :
 ~~~
-rustup target add wasm32-unknown-unknown
-cargo install trunk
+cargo run --release
 ~~~
 
-- Launch the server:
+Note: if you want to launch as dev, make sure to add the following feature to decrease compilation time :
 ~~~
-cd island_map_generator_web_app/
-trunk serve --release
-~~~
-
-- Open your web brower and go to :
-~~~
-0.0.0.0:8080
-~~~
+cargo run --features bevy/dynamic_linking 
+~~~ 
