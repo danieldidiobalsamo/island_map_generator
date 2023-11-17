@@ -7,7 +7,7 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 bevy = "0.12.0"
-bevy-inspector-egui = "0.21.0"
+bevy_egui = "0.23.0"
 island_map_generator_algo = {path = "../island_map_generator_algo"}
 
 # Enable a small amount of optimization in debug mode
