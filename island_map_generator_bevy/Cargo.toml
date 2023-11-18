@@ -2,8 +2,12 @@
 name = "island_map_generator_bevy"
 version = "0.1.0"
 edition = "2021"
-description = "This project is about island map procedural generation using Web Assembly (yew framework)"
+description = "Island map editor using procedural generation, Rust and Bevy engine"
 license = "GPL-3.0-or-later"
+keywords = ["terrain", "procedural", "generation", "bevy"]
+categories = ["games", "game-development"]
+readme = "README.md"
+repository = "https://github.com/danieldidiobalsamo/island_map_generator"
 
 [dependencies]
 bevy = "0.12.0"
