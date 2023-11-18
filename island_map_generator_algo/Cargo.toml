@@ -6,7 +6,6 @@ description = "Generation crate for an island map editor using procedural genera
 license = "GPL-3.0-or-later"
 keywords = ["terrain", "procedural", "generation", "bevy"]
 categories = ["games", "game-development"]
-readme = "README.md"
 repository = "https://github.com/danieldidiobalsamo/island_map_generator"
 
 [dependencies]
