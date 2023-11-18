@@ -12,7 +12,7 @@ repository = "https://github.com/danieldidiobalsamo/island_map_generator"
 [dependencies]
 bevy = "0.12.0"
 bevy_egui = "0.23.0"
-island_map_generator_algo = {path = "../island_map_generator_algo"}
+island_map_generator_algo = {path = "../island_map_generator_algo", version="0.1.0"}
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
